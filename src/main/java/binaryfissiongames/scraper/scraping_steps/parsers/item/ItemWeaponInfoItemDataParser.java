@@ -33,9 +33,9 @@ public class ItemWeaponInfoItemDataParser implements ItemDataParser<ItemWeaponIn
         ItemWeaponInfo info = new ItemWeaponInfo();
 
         if (nbt.contains(NBT_DAMAGE_TAG)) {
-            info.damageDealt = nbt.getInt(NBT_DAMAGE_TAG);
+            info.damageDealt = nbt.getDouble(NBT_DAMAGE_TAG);
         } else {
-            info.damageDealt = 0;
+            info.damageDealt = 0d;
         }
 
         if (nbt.contains(NBT_FORMULA_TAG)) {
@@ -43,9 +43,9 @@ public class ItemWeaponInfoItemDataParser implements ItemDataParser<ItemWeaponIn
         }
 
         if (nbt.contains(NBT_SPEED_TAG)) {
-            info.attackSpeed = nbt.getFloat(NBT_SPEED_TAG);
+            info.attackSpeed = nbt.getDouble(NBT_SPEED_TAG);
         } else {
-            info.attackSpeed = 0;
+            info.attackSpeed = 0d;
         }
 
         if (nbt.contains(NBT_PROJECTILE_TAG)) {

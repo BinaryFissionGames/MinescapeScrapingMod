@@ -20,6 +20,7 @@ public class ItemArmorInfoItemDataParser implements ItemDataParser<ItemArmorInfo
     private static final String MAGIC_PROTECTION_NBT_KEY = "stellar_extra_protectionMagic";
     private static final String MELEE_PROTECTION_NBT_KEY = "stellar_extra_protectionMelee";
     private static final String RANGED_PROTECTION_NBT_KEY = "stellar_extra_protectionRanged";
+    private static final String DRAGONFIRE_PROTECTION_NBT_KEY = "stellar_extra_protectionDragonFire";
     private static final Pattern DAMAGE_BUFFER_TOOLTIP_REGEX = Pattern.compile("Damage buffer: ([+-]?\\d+)%깻 ([+-]?\\d+)%깳 ([+-]?\\d+)%깷");
 
     @Override
@@ -43,13 +44,7 @@ public class ItemArmorInfoItemDataParser implements ItemDataParser<ItemArmorInfo
                         (tt) -> DAMAGE_BUFFER_TOOLTIP_REGEX.matcher(TextFormatting.getTextWithoutFormattingCodes(tt.getUnformattedComponentText())).find()
                 );
 
-//        if(!containsDamageBufferTooltip){
-//            String tooltips = invScreen.getTooltipFromItem(stack)
-//                    .stream().map(ITextComponent::getUnformattedComponentText).collect(Collectors.joining("\n"));
-//            MinescapeScrapingMod.LOGGER.warn("Could not find match for pattern '" + DAMAGE_BUFFER_TOOLTIP_REGEX.pattern() + "' on following tooltips:\n" + tooltips);
-//        }
-
-        return containsNbtKeys && containsDamageBufferTooltip;
+        return containsNbtKeys || containsDamageBufferTooltip;
     }
 
     @Override
@@ -59,9 +54,20 @@ public class ItemArmorInfoItemDataParser implements ItemDataParser<ItemArmorInfo
         Screen currentScreen = Minecraft.getInstance().currentScreen;
         ChestScreen invScreen = (ChestScreen) currentScreen;
 
-        info.magicProtection = nbtData.getInt(MAGIC_PROTECTION_NBT_KEY);
-        info.meleeProtection = nbtData.getInt(MELEE_PROTECTION_NBT_KEY);
-        info.rangedProtection = nbtData.getInt(RANGED_PROTECTION_NBT_KEY);
+        boolean containsNbtKeys =
+                nbtData.contains(MAGIC_PROTECTION_NBT_KEY) &&
+                        nbtData.contains(MELEE_PROTECTION_NBT_KEY) &&
+                        nbtData.contains(RANGED_PROTECTION_NBT_KEY);
+
+        if(containsNbtKeys){
+            info.magicProtection = nbtData.getInt(MAGIC_PROTECTION_NBT_KEY);
+            info.meleeProtection = nbtData.getInt(MELEE_PROTECTION_NBT_KEY);
+            info.rangedProtection = nbtData.getInt(RANGED_PROTECTION_NBT_KEY);
+        }
+
+        if(nbtData.contains(DRAGONFIRE_PROTECTION_NBT_KEY)){
+            info.dragonfireProtection = nbtData.getInt(DRAGONFIRE_PROTECTION_NBT_KEY);
+        }
 
         Optional<ITextComponent> matchedTextOpt = invScreen
                 .getTooltipFromItem(stack)
@@ -70,16 +76,14 @@ public class ItemArmorInfoItemDataParser implements ItemDataParser<ItemArmorInfo
                         (tt) -> DAMAGE_BUFFER_TOOLTIP_REGEX.matcher(TextFormatting.getTextWithoutFormattingCodes(tt.getUnformattedComponentText())).find()
                 ).findAny();
 
-        if(!matchedTextOpt.isPresent()){
-            throw new Error("Could not find any tooltip with damage buffers for item " + stack.getDisplayName().getUnformattedComponentText());
+        if(matchedTextOpt.isPresent()){
+            ITextComponent text = matchedTextOpt.get();
+            Matcher matcher = DAMAGE_BUFFER_TOOLTIP_REGEX.matcher(TextFormatting.getTextWithoutFormattingCodes(text.getUnformattedComponentText()));
+            matcher.find();
+            info.meleeBuffer = Integer.parseInt(matcher.group(1));
+            info.magicBuffer = Integer.parseInt(matcher.group(2));
+            info.rangedBuffer = Integer.parseInt(matcher.group(3));
         }
-
-        ITextComponent text = matchedTextOpt.get();
-        Matcher matcher = DAMAGE_BUFFER_TOOLTIP_REGEX.matcher(TextFormatting.getTextWithoutFormattingCodes(text.getUnformattedComponentText()));
-        matcher.find();
-        info.meleeBuffer = Integer.parseInt(matcher.group(1));
-        info.magicBuffer = Integer.parseInt(matcher.group(2));
-        info.rangedBuffer = Integer.parseInt(matcher.group(3));
 
         return info;
     }

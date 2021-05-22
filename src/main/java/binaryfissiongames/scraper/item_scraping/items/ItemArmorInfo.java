@@ -6,6 +6,7 @@ public class ItemArmorInfo implements ScrapingData {
     public int meleeProtection;
     public int magicProtection;
     public int rangedProtection;
+    public int dragonfireProtection;
     public double meleeBuffer;
     public double magicBuffer;
     public double rangedBuffer;

@@ -5,12 +5,16 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.inventory.ChestScreen;
 import net.minecraft.inventory.container.ClickType;
 import net.minecraft.inventory.container.Container;
+import net.minecraft.inventory.container.Slot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.util.text.TextFormatting;
+import org.apache.commons.lang3.Range;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +29,38 @@ public class Util {
 
         for (int i = 0; i < l1.size(); i++) {
             if (!l1.get(i).equals(l2.get(i))) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static <T> boolean areListsEqual(List<T> l1, List<T> l2, Comparator<T> comparator) {
+        if (l1.size() != l2.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < l1.size(); i++) {
+            if (comparator.compare(l1.get(i), l2.get(i)) != 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /*
+    * Checks to make sure every element l1[n] != l2[n].
+    * */
+    public static <T> boolean areAllListElementsUnequal(List<T> l1, List<T> l2, Comparator<T> comparator) {
+        for (int i = 0; i < l1.size(); i++) {
+            if(i >= l2.size()){
+                // Test held for all elements, but we reached the end of l2.
+                // That means that all the elements in the list are, indeed, unequal.
+                break;
+            }
+            if (comparator.compare(l1.get(i), l2.get(i)) == 0) {
                 return false;
             }
         }
@@ -102,13 +138,17 @@ public class Util {
                 .windowClick(container.windowId, slotNumber, 0, ClickType.PICKUP, Minecraft.getInstance().player);
     }
 
-    public static List<String> getCurrentContainerItemNames(int notIncludingSlot) {
+    public static List<ItemStack> getCurrentContainerItemStacks(Range<Integer> includeRange) {
         Screen screen = Minecraft.getInstance().currentScreen;
         ChestScreen chestScreen = (ChestScreen) screen;
         return chestScreen.getContainer().inventorySlots
                 .stream()
-                .filter((s) -> s.getHasStack() && s.slotNumber != notIncludingSlot)
-                .map((s) -> s.getStack().getDisplayName().getUnformattedComponentText())
+                .filter((s) -> s.getHasStack() && includeRange.contains(s.slotNumber))
+                .map(Slot::getStack)
                 .collect(Collectors.toList());
+    }
+
+    public static Range<Integer> getContainerRangeExcludingLastRow(int rows){
+        return Range.between(0, rows * 9 - 1);
     }
 }

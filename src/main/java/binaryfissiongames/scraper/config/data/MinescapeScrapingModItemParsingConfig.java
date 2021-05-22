@@ -70,6 +70,18 @@ public class MinescapeScrapingModItemParsingConfig {
     public boolean includeMiscInfo = true;
 
     @MinescapeScrapingModParserConfigOption(
+            descriptionTransKey = "minescapescraping.config.itemparser.includePrayerInfo",
+            parserClass = ItemPrayerInfoItemDataParser.class
+    )
+    public boolean includePrayerInfo = true;
+
+    @MinescapeScrapingModParserConfigOption(
+            descriptionTransKey = "minescapescraping.config.itemparser.includeToolTag",
+            parserClass = ItemToolInfoItemDataParser.class
+    )
+    public boolean includeToolTag = true;
+
+    @MinescapeScrapingModParserConfigOption(
             descriptionTransKey = "minescapescraping.config.itemparser.includeNBTInfo",
             parserClass = NBTInfoItemDataParser.class
     )

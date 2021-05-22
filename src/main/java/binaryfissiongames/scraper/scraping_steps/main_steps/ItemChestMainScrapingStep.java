@@ -21,14 +21,12 @@ import java.util.regex.Pattern;
 public class ItemChestMainScrapingStep implements MainScrapingStep {
     private final ScreenValidator validator;
     private final List<ItemDataParser<?>> parsers;
-    private int nextSlotNumber = 0;
 
     private final IntervalTimer beforeNextTimer;
     private final IntervalTimer afterNextTimer;
 
-
     private List<Map<String, Object>> parsedData;
-    private List<String> curScreenAllItemNames = new ArrayList<>();
+    private List<ItemStack> curScreenAllItemStacks = new ArrayList<>();
     private ItemChestMainScrapingStepState state = ItemChestMainScrapingStepState.INITIAL;
 
     private final static Pattern PREV_BUTTON_PATTERN = Pattern.compile("Previous$");
@@ -63,7 +61,7 @@ public class ItemChestMainScrapingStep implements MainScrapingStep {
 
         switch (state) {
             case INITIAL:
-                curScreenAllItemNames = new ArrayList<>();
+                curScreenAllItemStacks = new ArrayList<>();
                 parsedData = new ArrayList<>();
                 state = ItemChestMainScrapingStepState.SCRAPING;
                 break;
@@ -126,11 +124,15 @@ public class ItemChestMainScrapingStep implements MainScrapingStep {
                         throw new ScrapingException("Failed to find next slot in WAITING_TO_PRESS_NEXT!", "Couldn't find next button!");
                     }
 
-                    nextSlotNumber = nextSlot.get().slotNumber;
                     state = ItemChestMainScrapingStepState.WAITING_FOR_NEXT_TO_CHANGE;
-                    curScreenAllItemNames = Util.getCurrentContainerItemNames(nextSlotNumber);
 
-                    Util.clickSlot(container, nextSlotNumber);
+                    /*
+                    * Disclude the bottom row of the chest!
+                    * */
+
+                    curScreenAllItemStacks = Util.getCurrentContainerItemStacks(Util.getContainerRangeExcludingLastRow(container.getNumRows()));
+
+                    Util.clickSlot(container, nextSlot.get().slotNumber);
 
                     afterNextTimer.reset();
                 }
@@ -141,9 +143,26 @@ public class ItemChestMainScrapingStep implements MainScrapingStep {
                 }
 
                 //Wait for items to change. When they do change, switch back to the scraping state.
-                List<String> actualCurItemNames = Util.getCurrentContainerItemNames(this.nextSlotNumber);
+                List<ItemStack> actualCurItemNames = Util.getCurrentContainerItemStacks(Util.getContainerRangeExcludingLastRow(container.getNumRows()));
 
-                if (!Util.areListsEqual(curScreenAllItemNames, actualCurItemNames)) {
+                MinescapeScrapingMod.LOGGER.debug("Last item names");
+                for(ItemStack i: curScreenAllItemStacks){
+                    MinescapeScrapingMod.LOGGER.debug("\t- " + i.getDisplayName().getUnformattedComponentText());
+                }
+
+                MinescapeScrapingMod.LOGGER.debug("Current item names:");
+                for(ItemStack i: actualCurItemNames){
+                    MinescapeScrapingMod.LOGGER.debug("\t- " + i.getDisplayName().getUnformattedComponentText());
+                }
+
+                if (Util.areAllListElementsUnequal(curScreenAllItemStacks, actualCurItemNames,
+                        (i1, i2) -> {
+                            if(i1.equals(i2, false)){
+                                return 0;
+                            }
+                            return -1;
+                        })
+                ) {
                     MinescapeScrapingMod.LOGGER.info("Screen changed, continuing scraping.");
                     this.state = ItemChestMainScrapingStepState.SCRAPING;
                 }

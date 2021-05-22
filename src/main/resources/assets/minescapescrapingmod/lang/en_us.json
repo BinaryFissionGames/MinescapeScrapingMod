@@ -18,6 +18,8 @@
   "minescapescraping.config.itemparser.includeDurabilityInfo": "Durability Info",
   "minescapescraping.config.itemparser.includeSetInfo": "Set Info",
   "minescapescraping.config.itemparser.includeMiscInfo": "Misc Info",
+  "minescapescraping.config.itemparser.includePrayerInfo": "Prayer Bonuses",
+  "minescapescraping.config.itemparser.includeToolTag": "Tool Tag",
 
   "minescapescraping.config.mobparser.catdesc": "Mob Scraping",
   "minescapescraping.config.mobparser.includeGeneralInfo": "General Info",
